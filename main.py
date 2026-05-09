@@ -1,11 +1,24 @@
 from pygame import *
 from random import *
 import math
+from settings import *
+from sounds import *
+#from menu import *
 init()
-window = display.set_mode((800, 600))
+mixer.init()
+window = display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
 clock = time.Clock()
 game = True
+shot_sound = mixer.Sound("assets/sounds/shot.mp3")
+shot_sound.set_volume(0.3)
 
+
+
+fon_image = image.load("assets/images/fon.png")
+player_image = image.load("assets/images/player.png").convert_alpha()
+zombies_image = image.load("assets/images/zombies.png").convert_alpha()
+player_image = transform.scale(player_image, (100, 100))
+zombies_image = transform.scale(zombies_image, (50, 50))
 player_y = 400
 player_x = 300
 player_hp = 100
@@ -15,7 +28,7 @@ zombies = []
 bullets = []
 def spawn_zombie():
     for i in range(10):
-        zombies.append([randint(0, 800), randint(0, 100)])
+        zombies.append([randint(0, 1920), randint(0, 100)])
 spawn_zombie()
 
 font = font.Font(None, 36)
@@ -24,7 +37,7 @@ while game:
     for e in event.get():
         if e.type == QUIT:
             game = False
-    window.fill('green')
+    window.blit(fon_image, (0, 0))
     keys = key.get_pressed()
     if keys[K_w]:
         player_y -= 5
@@ -34,7 +47,7 @@ while game:
         player_x -= 5
     if keys[K_d]:
         player_x += 5
-
+    window.blit(player_image, (player_x, player_y))
 
     for zombie in zombies:
         dx = player_x - zombie[0]
@@ -47,14 +60,18 @@ while game:
         if dist != 0:
             zombie[0] += dx / dist * 2
             zombie[1] += dy / dist * 2
-    draw.circle(window, 'red', (player_x, player_y), 20)
+
     if e.type == MOUSEBUTTONDOWN:
         mx, my = mouse.get_pos()
-
+        shot_sound.play()
         dx = mx - player_x
         dy = my - player_y
         dist = (dx ** 2 + dy ** 2) ** 0.5
 
+        angle = math.degrees(math.atan2(-dy, dx))
+        rotated_image = transform.rotate(player_image, angle)
+        new_rect = rotated_image.get_rect(center=(player_x, player_y))
+        window.blit(rotated_image, new_rect.topleft)
         if dist != 0:
             bullets.append([
                 player_x,
@@ -62,19 +79,14 @@ while game:
                 dx / dist * 10,
                 dy / dist * 10
             ])
-    for zombie in zombies[:]:
-        # Створюємо прямокутник для зомбі (x, y, ширина, висота)
-        # Якщо радіус 20, то ширина і висота будуть 40
-        zombie_rect = Rect(zombie[0] - 20, zombie[1] - 20, 40, 40)
 
-        # Малюємо зомбі
-        draw.circle(window, (0, 0, 255), (int(zombie[0]), int(zombie[1])), 20)
+
+    for zombie in zombies[:]:
+        zombie_rect = Rect(zombie[0] - 20, zombie[1] - 20, 40, 40)
+        window.blit(zombies_image, (zombie[0], zombie[1]))
 
         for bullet in bullets[:]:
-            # Створюємо прямокутник для кулі (наприклад, розміром 10x10)
             bullet_rect = Rect(bullet[0] - 5, bullet[1] - 5, 10, 10)
-
-            # Перевіряємо зіткнення прямокутників
             if bullet_rect.colliderect(zombie_rect):
                 bullets.remove(bullet)
                 zombies.remove(zombie)
@@ -89,7 +101,7 @@ while game:
         bullet[0] += bullet[2] * 2
         bullet[1] += bullet[3] * 2
     for bullet in bullets[:]:
-        if bullet[0] < 0 or bullet[0] > 800 or bullet[1] < 0 or bullet[1] > 600:
+        if bullet[0] < 0 or bullet[0] > 1920 or bullet[1] < 0 or bullet[1] > 1080:
             bullets.remove(bullet)
     window.blit(score_text, (10,50))
     window.blit(hp_text, (10, 10))

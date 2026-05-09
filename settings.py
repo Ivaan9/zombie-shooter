@@ -1,6 +1,6 @@
-WINDOW_WIDTH = 1000
-WINDOW_HEIGHT = 500
-WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
-GREY = (200, 200, 200)
-RED = (255, 0, 0)
+WINDOW_WIDTH = 1920
+WINDOW_HEIGHT = 1080
+
+sounds = {
+    "shot_sound": "shot.mp3"
+}
